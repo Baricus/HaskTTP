@@ -17,7 +17,7 @@ name:               HaskTTP-Server
 version:            0.1.0.0
 
 -- A short (one-line) description of the package.
-synopsis:           A tiny http server for static content that is likely insecure.
+synopsis:           A tiny http server for static content of dubious security. 
 
 -- A longer description of the package.
 description: tinywebserver is a program modelled off the python http.server module and similar projects.  It only implements HTTP GET and POST requests, the minimal requirements for HTTP 1.1.  The underlying HTTP handling is contained in the included "socketeer" library, which provides combinators for handling arbitrary socket connections based on Network, HTTP parsing, and logging.  
@@ -29,7 +29,8 @@ homepage:
 -- bug-reports:
 
 -- The license under which the package is released.
-license:            NONE
+license:            AGPL-3.0-or-later
+license-file: 		LICENSE
 
 -- The package author(s).
 author:             Baricus
