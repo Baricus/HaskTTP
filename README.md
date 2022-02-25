@@ -1,7 +1,7 @@
 # HaskTTP-Server
 HaskTTP-Server is a (hopefully) conditionally compliant HTTP/1.1 server for static content, similar in functionality to Python's `http.server` module.  The program does not support the full HTTP/1.1 specification, handling only GET and POST requests.  
 
-[`attoparsec`][https://hackage.haskell.org/package/attoparsec] parser combinators are used for parsing incoming HTTP request headers.  Receiving this data is handled using TCP socket connections from the [`network`][https://hackage.haskell.org/package/network] library.  
+[`attoparsec`](https://hackage.haskell.org/package/attoparsec) parser combinators are used for parsing incoming HTTP request headers.  Receiving this data is handled using TCP socket connections from the [`network`](https://hackage.haskell.org/package/network) library.  
 
 ## SECURITY
 This is a web server, designed to provide read access to any files in the current directory.  While, to my knowledge, it will not provide access to other files, this is a personal project of someone learning Haskell!  Trust this application at your own risk; I do not recommend running this as a public facing web server, especially as a long term solution on the standard port.  There are plenty of better known alternatives if you need a simple HTTP server and far better options for hosting permanent websites.  
