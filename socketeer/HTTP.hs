@@ -44,8 +44,8 @@ import qualified Data.Map as M
 -- all unseccesful parses by returning a 400 (invalid request) error code.
 filterFailed :: ((Message, ByteString) -> Handler a) -> (Result Message -> Handler ())
 -- this should be impossible unless the client connection died
-filterFailed _ (Partial _) = send400 
-filterFailed _ (Fail _ _ _) = send400 
+filterFailed _ (Partial _) = send400 M.empty
+filterFailed _ (Fail _ _ _) = send400 M.empty
 filterFailed hdlr (Done r msg) = hdlr (msg, r) *> pure ()
 
 -- | 
@@ -56,39 +56,39 @@ recvHttp = parseWith (recv 4096) message BS.empty
 -- | 
 -- Takes in a map of headers and the status code and sends the entire thing over the wire.  
 -- If an invalid code is given, this function does nothing.  
-sendStat :: Map ByteString ByteString -> Int -> Handler ()
-sendStat m c | c > 99 && c < 512 = sendMessage $ Message (StatLine (HTTP 1 1) c) m
+sendStat :: Int -> Map ByteString ByteString -> Handler ()
+sendStat c m | c > 99 && c < 512 = sendMessage $ Message (StatLine (HTTP 1 1) c) m
              | otherwise = pure ()
 
 -- send status codes with no headers (good for when headers are simple enough to not worry)
 
 -- | 400 Bad Request
-send400 :: Handler ()
-send400 = sendStat M.empty 400
+send400 :: Map ByteString ByteString -> Handler ()
+send400 = sendStat 400
 
 -- | 404 Not Found
-send404 :: Handler ()
-send404 = sendStat M.empty 404
+send404 :: Map ByteString ByteString -> Handler ()
+send404 = sendStat 404
 
 -- | 200 OK
-send200 :: Handler ()
-send200 = sendStat M.empty 200
+send200 :: Map ByteString ByteString -> Handler ()
+send200 = sendStat 200
 
 -- | Identical to sendStat but logs the status code sent to the client.
-sendStatL :: Map ByteString ByteString -> Int -> Handler ()
-sendStatL m c = appLog (showt c) *> sendStat m c
+sendStatL :: Int -> Map ByteString ByteString -> Handler ()
+sendStatL c m = appLog (showt c) *> sendStat c m
 
 -- | Log enabled 400 Bad Request
-send400L :: Handler ()
-send400L = sendStatL M.empty 400
+send400L :: Map ByteString ByteString -> Handler ()
+send400L = sendStatL 400
 
 -- | Log enabled 404 Bad Request
-send404L :: Handler ()
-send404L = sendStatL M.empty 404
+send404L :: Map ByteString ByteString -> Handler ()
+send404L = sendStatL 404
 
 -- | Log enabled 200 OK
-send200L :: Handler ()
-send200L = sendStatL M.empty 200
+send200L :: Map ByteString ByteString -> Handler ()
+send200L = sendStatL 200
 
 
 -- | sendMessage

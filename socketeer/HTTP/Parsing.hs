@@ -50,7 +50,6 @@ message = do
     h <- manyTill header clrf
     pure $ Message s $ Map.fromList h
 
-
 -- various combinators building up the above
 
 -- Some basic, small combinators

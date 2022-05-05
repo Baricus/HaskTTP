@@ -55,26 +55,26 @@ constructIndex folderPath = do
 handleGet :: (Message, ByteString) -> Handler ()
 handleGet (Message{start = (ReqLine GET (Target resource _) _)}, _) = do
     -- the path needs to start with a / but it's really relative
-    when (head resource /= '/') send400L -- checked in parser but re-confirmed here
+    when (head resource /= '/') $ send400L M.empty -- checked in parser but re-confirmed here
     path <- liftIO $ makeAbsolute (drop 1 resource) >>= canonicalizePath
     -- if we can't find it as a file or directory, 404 file not found
     exists <- liftIO $ doesPathExist path
     if (not exists) 
-       then (sendStatL M.empty 404) 
+       then (sendStatL 404 M.empty) 
        else handleExisting path
     where handleExisting path = do
               -- if it's a file (not a directory) send it, else send our main page
               isFile <- liftIO $ doesFileExist path
               if isFile then handleFile path else handleDir path
-          -- to handle a file, just send the content
-          handleFile path = send200L *> sendFile path
+          -- to handle a file, just send the content TODO MIME types
+          handleFile path = send200L M.empty *> sendFile path
           -- to handle a directory, build the new index page if it doesn't already exist
           handleDir path  = do
-              -- see if an index.html exists in this directory to send 
+              -- see if an index.html exists in this directory to send TODO MIME types
               indexExists <- liftIO $ doesFileExist $ path ++ "/index.html"
               if indexExists 
-                 then send200L *> sendFile (path ++ "/index.html")
-                 else send200L *> (liftIO $ constructIndex path) >>= sendAll
+                 then send200L M.empty *> sendFile (path ++ "/index.html")
+                 else send200L M.empty *> (liftIO $ constructIndex path) >>= sendAll
 -- anything else means ignore
 handleGet _ = pure ()
 
@@ -83,11 +83,11 @@ handleGet _ = pure ()
 -- does not include content-length as it is not required
 handleHead :: (Message, ByteString) -> Handler ()
 handleHead (Message{start = (ReqLine HEAD (Target resource _) _)}, _) = do
-    when (head resource /= '/') send400L -- checked in parser but re-confirmed here
+    when (head resource /= '/') $ send400L M.empty -- checked in parser but re-confirmed here
     path <- liftIO $ makeAbsolute (drop 1 resource) >>= canonicalizePath
     -- if we can't find it as a file or directory, 404 file not found
     exists <- liftIO $ doesPathExist path
-    if (not exists) then send404L else send200L
+    if (not exists) then send404L M.empty else send200L M.empty
 handleHead _ = pure ()
 
 -- | handleUnimplemented
@@ -96,6 +96,6 @@ handleUnimplemented :: (Message, ByteString) -> Handler ()
 handleUnimplemented (Message{start = (ReqLine a _ _)}, _) = case a of
                                                             GET -> pure ()
                                                             HEAD -> pure ()
-                                                            _ -> sendStatL M.empty 501
+                                                            _ -> sendStatL 501 M.empty
 -- status line sent to server means bad request, but we'll have fun here
-handleUnimplemented _ = sendStatL M.empty 418
+handleUnimplemented _ = sendStatL 418 M.empty 
