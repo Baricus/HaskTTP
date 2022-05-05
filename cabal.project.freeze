@@ -32,6 +32,7 @@ constraints: any.array ==0.5.4.0,
              any.indexed-traversable ==0.1.2,
              any.integer-logarithms ==1.0.3.1,
              integer-logarithms -check-bounds +integer-gmp,
+             any.mime-types ==0.1.0.9,
              any.mtl ==2.2.2,
              any.network ==3.1.2.7,
              network -devel,
@@ -55,4 +56,4 @@ constraints: any.array ==0.5.4.0,
              any.transformers-compat ==0.7.1,
              transformers-compat -five +five-three -four +generic-deriving +mtl -three -two,
              any.unix ==2.7.2.2
-index-state: hackage.haskell.org 2022-02-24T13:53:50Z
+index-state: hackage.haskell.org 2022-05-04T20:51:25Z

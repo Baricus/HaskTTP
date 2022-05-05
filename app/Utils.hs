@@ -19,6 +19,8 @@ import System.Directory
 import Control.Monad
 import Control.Monad.IO.Class (liftIO)
 
+import Network.Mime
+
 -- | constructIndex
 -- takes a filepath and returns an index.html file of all files/folders in that directory
 -- as links that are clickable
@@ -49,6 +51,16 @@ constructIndex folderPath = do
                         -- one bulleted link in the file
                     in "<li><a href=\"" <> urlPath <> "\">" <> urlPath <> "</a></li>" <> rest) end files'
 
+
+-- | getHeaders
+-- Returns the headers for a request given either the mime type or the filename.
+-- Currently this just creates the Content-Type header.
+getHeaders :: Either MimeType FilePath -> M.Map ByteString ByteString
+getHeaders input = let mtype = case input of 
+                                Left t     -> t
+                                Right file -> defaultMimeLookup . T.pack $ takeFileName file
+                    in M.fromList [("Content-Type", mtype)]
+
 -- | handleGet
 -- serves content from get requests
 -- Does not care about anything else on the wire or leftover
@@ -67,14 +79,17 @@ handleGet (Message{start = (ReqLine GET (Target resource _) _)}, _) = do
               isFile <- liftIO $ doesFileExist path
               if isFile then handleFile path else handleDir path
           -- to handle a file, just send the content TODO MIME types
-          handleFile path = send200L M.empty *> sendFile path
+          handleFile path = send200L (getHeaders $ Right path) *> sendFile path
           -- to handle a directory, build the new index page if it doesn't already exist
-          handleDir path  = do
-              -- see if an index.html exists in this directory to send TODO MIME types
-              indexExists <- liftIO $ doesFileExist $ path ++ "/index.html"
+          handleDir dir  = do
+              -- see if an index.html exists in this directory to send
+              let file = (dir <> "/index.html")
+              indexExists <- liftIO $ doesFileExist file
               if indexExists 
-                 then send200L M.empty *> sendFile (path ++ "/index.html")
-                 else send200L M.empty *> (liftIO $ constructIndex path) >>= sendAll
+                 -- send the file directly
+                 then send200L (getHeaders $ Right file) *> sendFile file
+                 -- create our index and send it
+                 else send200L (getHeaders $ Left "text/html") *> (liftIO $ constructIndex dir) >>= sendAll
 -- anything else means ignore
 handleGet _ = pure ()
 
@@ -87,7 +102,7 @@ handleHead (Message{start = (ReqLine HEAD (Target resource _) _)}, _) = do
     path <- liftIO $ makeAbsolute (drop 1 resource) >>= canonicalizePath
     -- if we can't find it as a file or directory, 404 file not found
     exists <- liftIO $ doesPathExist path
-    if (not exists) then send404L M.empty else send200L M.empty
+    if (not exists) then send404L M.empty else send200L (getHeaders $ Right path)
 handleHead _ = pure ()
 
 -- | handleUnimplemented
