@@ -113,4 +113,5 @@ handleUnimplemented (Message{start = (ReqLine a _ _)}, _) = case a of
                                                             HEAD -> pure ()
                                                             _ -> sendStatL 501 M.empty
 -- status line sent to server means bad request, but we'll have fun here
+-- This technically breaks the spec
 handleUnimplemented _ = sendStatL 418 M.empty 
